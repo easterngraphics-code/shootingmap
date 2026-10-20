@@ -1,6 +1,6 @@
 // 撮影ツール service worker（メニューと全アプリ共通）
 // アプリを追加したら SHELL にそのフォルダのファイルを足し、VERSION を上げる
-const VERSION = 'v3';
+const VERSION = 'v4';
 const APP = `app-${VERSION}`;
 const TILES = 'tiles';
 const MAX_TILES = 1500;
@@ -12,7 +12,8 @@ const SHELL = [
   './photo-bearing/icons/icon-180.png', './photo-bearing/icons/icon-192.png', './photo-bearing/icons/favicon-64.png',
   // 共通ライブラリ
   'https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
+  'https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js'
 ];
 const TILE_HOSTS = ['cyberjapandata.gsi.go.jp', 'server.arcgisonline.com'];
 const STATIC_HOSTS = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
