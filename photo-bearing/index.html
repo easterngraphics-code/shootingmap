@@ -60,7 +60,9 @@ h1 span{color:var(--accent)}
 .cammsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:min(86vw,380px);background:rgba(0,0,0,.8);border-radius:12px;padding:16px;font-size:14px;line-height:1.6;text-align:center}
 .cambottom{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));background:linear-gradient(transparent,rgba(0,0,0,.6))}
 .cambottom .cambtn{justify-self:end}
-.camcount{font:600 13px var(--f-mono);opacity:.9}
+.cam.setupmode .camhud,.cam.setupmode .camchips{display:none}
+.camtitle{font:700 15px var(--f-display);align-self:center}
+.cam:not(.setupmode) .camtitle{display:none}
 .shutter{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.25);cursor:pointer;box-shadow:inset 0 0 0 4px rgba(0,0,0,.35)}
 .shutter:active{background:#fff}
 .shutter:disabled{opacity:.4}
@@ -133,6 +135,9 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
 .setuphead span{font-size:12px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .setupimg{width:100%;max-height:420px;object-fit:contain;border-radius:8px;background:var(--bg)}
 .setupdrop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;min-height:220px;border:1.5px dashed var(--line);border-radius:10px;padding:20px;cursor:pointer;color:var(--muted);font-size:13px}
+.setupbtns2{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:4px 0}
+.setupbtns2 .btn{cursor:pointer}
+.setupdrop{cursor:default}
 .setupdrop b{color:var(--accent);font-size:15px}
 .setupdrop:hover{border-color:var(--accent)}
 .setupbtns{display:flex;gap:8px}
@@ -218,7 +223,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
   <label class="drop" id="drop" for="file">
     <button class="btn" type="button" id="shoot">写真を撮る</button>
     <button class="btn" type="button" id="pick">写真を選ぶ</button>
-    <p><b>写真を撮る</b>：スマホのカメラで撮影し、位置と向きを記録します。<br><b>写真を選ぶ</b>：iPhoneの写真（HEIC / JPEG / ProRAW DNG）を読み込みます。ここにドロップもできます。</p>
+    <p><b>写真を撮る</b>：スマホのカメラで1枚撮影し、位置と向きを記録します。<br><b>写真を選ぶ</b>：iPhoneの写真（HEIC / JPEG / ProRAW DNG）を読み込みます。ここにドロップもできます。</p>
     <input type="file" id="file" accept="image/*,.heic,.heif,.dng,image/x-adobe-dng" multiple>
   </label>
 
@@ -259,6 +264,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
   <video id="camvideo" playsinline muted autoplay></video>
   <div class="camtop">
     <button type="button" class="cambtn" id="camclose">閉じる</button>
+    <span class="camtitle">撮影風景を撮る</span>
     <div class="camchips"><span class="camchip" id="camgps">GPS 取得中…</span><span class="camchip" id="camcmp">方位センサー待ち</span></div>
   </div>
   <div class="camhud" aria-live="off">
@@ -268,9 +274,9 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
   </div>
   <div class="cammsg" id="cammsg" hidden></div>
   <div class="cambottom">
-    <div class="camcount" id="camcount"></div>
+    <span></span>
     <button type="button" class="shutter" id="shutter" aria-label="撮影"></button>
-    <button type="button" class="cambtn" id="camdone">完了</button>
+    <span></span>
   </div>
   <div class="camflash" id="camflash"></div>
 </div>
@@ -383,14 +389,15 @@ function renderSetup(){
   let h=`<div class="setuphead"><h2>撮影風景</h2><span>カメラを設置した様子</span></div>`;
   if(p&&p.setup){
     h+=`<img class="setupimg" src="${p.setup}" alt="撮影風景">`;
-    h+=`<div class="setupbtns"><label class="mini" for="setupfile">差し替える</label><button class="mini" type="button" id="setupdel">外す</button></div>`;
+    h+=`<div class="setupbtns"><button class="mini" type="button" id="setupshoot">撮り直す</button><label class="mini" for="setupfile">選び直す</label><button class="mini" type="button" id="setupdel">外す</button></div>`;
   }else{
-    h+=`<label class="setupdrop" for="setupfile"><b>カメラを写した写真を追加</b><span>タップして選ぶか、ここにドロップ。iPhoneならその場で撮影もできます。</span></label>`;
+    h+=`<div class="setupdrop"><b>カメラを写した写真を追加</b><div class="setupbtns2"><button class="btn" type="button" id="setupshoot" style="background:var(--teal)">写真を撮る</button><label class="btn" for="setupfile">写真を選ぶ</label></div><span>ここにドロップもできます</span></div>`;
   }
   h+=`<input type="file" id="setupfile" accept="image/*,.heic,.heif">`;
   el.innerHTML=h;
   $('#setupfile').onchange=e=>{const f=e.target.files[0];if(f)setSetup(f)};
   const d=$('#setupdel');if(d)d.onclick=()=>{p.setup=null;renderSetup()};
+  const sh=$('#setupshoot');if(sh)sh.onclick=()=>openCamera('setup');
 }
 function setSetup(f){const p=photos[active];if(!p)return;p.setup=URL.createObjectURL(f);renderSetup()}
 {const el=$('#setup');
@@ -706,19 +713,23 @@ function camLoop(){
   else {g.textContent=`GPS ±${Math.round(C.pos.acc)}m`;g.className='camchip '+(C.pos.acc<=20?'ok':'warn')}
   camRAF=requestAnimationFrame(camLoop);
 }
-async function openCamera(){
+async function openCamera(mode){
+  C.mode=mode==='setup'?'setup':'shot';
+  $('#cam').classList.toggle('setupmode',C.mode==='setup');
   // iOS：方位センサーの許可はタップ直後に求める必要がある
   let oriAsk=null;
-  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+  if(C.mode==='shot'&&typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
     oriAsk=DeviceOrientationEvent.requestPermission().catch(()=> 'denied');
   }
-  $('#cam').hidden=false;document.body.style.overflow='hidden';camMsg('');C.shots=[];$('#camcount').textContent='';
+  $('#cam').hidden=false;document.body.style.overflow='hidden';camMsg('');C.shots=[];
   C.head=null;C.vx=0;C.vy=0;
   if(!window.isSecureContext||!navigator.mediaDevices){camMsg('カメラは https のページでのみ使えます。公開ページ（github.io）から開いてください。');return}
   if(oriAsk&&(await oriAsk)!=='granted') camMsg('方位センサーが許可されていません。向きなしで撮影されます。<br>許可するには、Safariを開き直してもう一度「写真を撮る」を押してください。');
+  if(C.mode==='shot'){
   window.addEventListener('deviceorientationabsolute',onOrient);
   window.addEventListener('deviceorientation',onOrient);
-  if(navigator.geolocation){
+  }
+  if(C.mode==='shot'&&navigator.geolocation){
     C.watch=navigator.geolocation.watchPosition(ps=>{C.pos={lat:ps.coords.latitude,lng:ps.coords.longitude,acc:ps.coords.accuracy,alt:ps.coords.altitude,t:ps.timestamp}},
       err=>{if(err.code===1)camMsg('位置情報が許可されていません。設定 → プライバシー → 位置情報サービス → Safari（またはSafariのWebサイト）を「使用中のみ許可」にしてください。')},
       {enableHighAccuracy:true,maximumAge:0,timeout:30000});
@@ -743,6 +754,11 @@ function exifDate(d){const z=n=>String(n).padStart(2,'0');return `${d.getFullYea
 async function takeShot(){
   if(C.busy)return;const v=$('#camvideo');if(!v.videoWidth){camMsg('カメラの準備中です。少し待ってからもう一度押してください。');return}
   C.busy=true;$('#shutter').disabled=true;
+  if(C.mode==='setup'){
+    const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);
+    cv.toBlob(b=>{C.busy=false;$('#shutter').disabled=false;if(b)setSetup(new File([b],'setup.jpg',{type:'image/jpeg'}));closeCamera()},'image/jpeg',0.9);
+    return;
+  }
   const now=new Date(),head=C.head,hacc=C.hacc,pos=C.pos?{...C.pos}:null; // 押した瞬間の値
   const f=$('#camflash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),60);
   try{
@@ -775,10 +791,12 @@ async function takeShot(){
     // 写真データは自前で組み立てる（exifr の読み直しに頼らない）
     const p={name,file,thumb:URL.createObjectURL(file),lat:pos?pos.lat:null,lng:pos?pos.lng:null,acc:pos?pos.acc:null,alt:pos&&pos.alt!=null?pos.alt:null,
       dir:head,ref:head!=null?'M':null,hacc:hacc,date:now,f35:iPhone?26:null,w:cv.width,h:cv.height,portrait:cv.height>cv.width,model:iPhone?'iPhone（ブラウザカメラ）':'ブラウザカメラ'};
-    C.shots.push(normDir(p));
-    $('#camcount').textContent=`${C.shots.length}枚撮影`;
+    C.shots=[normDir(p)];
+    C.busy=false;$('#shutter').disabled=false;
+    closeCamera();   // 1枚撮ったらすぐ戻る
+    return;
   }catch(e){camMsg('保存に失敗しました：'+esc(e.message||e))}
-  finally{C.busy=false;$('#shutter').disabled=false}
+  C.busy=false;$('#shutter').disabled=false;
 }
 async function savePhoto(p){
   try{
@@ -786,10 +804,9 @@ async function savePhoto(p){
   }catch(e){if(e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(p.file);a.download=p.name;document.body.appendChild(a);a.click();a.remove();
 }
-$('#shoot').onclick=e=>{e.preventDefault();e.stopPropagation();openCamera()};
+$('#shoot').onclick=e=>{e.preventDefault();e.stopPropagation();openCamera('shot')};
 $('#shutter').onclick=takeShot;
 $('#camclose').onclick=closeCamera;
-$('#camdone').onclick=closeCamera;
 
 $('#pick').onclick=e=>{e.preventDefault();$('#file').click()};
 $('#file').onchange=e=>{handle(e.target.files);e.target.value=''};
