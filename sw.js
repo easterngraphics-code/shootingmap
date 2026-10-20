@@ -1,6 +1,6 @@
 // 撮影ツール service worker（メニューと全アプリ共通）
 // アプリを追加したら SHELL にそのフォルダのファイルを足し、VERSION を上げる
-const VERSION = 'v10';
+const VERSION = 'v11';
 const APP = `app-${VERSION}`;
 const TILES = 'tiles';
 const MAX_TILES = 1500;
@@ -13,7 +13,8 @@ const SHELL = [
   // 共通ライブラリ
   'https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
-  'https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js'
+  'https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js',
+  'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'
 ];
 const TILE_HOSTS = ['cyberjapandata.gsi.go.jp', 'server.arcgisonline.com'];
 const STATIC_HOSTS = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -66,10 +67,11 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
       const c = await caches.open(TILES);
       const hit = await c.match(req);
-      if (hit) return hit;
+      // 画像書き出し用（CORS）の要求には、CORSなしで保存した古いタイルを返さない
+      if (hit && !(req.mode === 'cors' && hit.type === 'opaque')) return hit;
       try {
         const res = await fetch(req);
-        if (res.ok || res.type === 'opaque') { c.put(req, res.clone()); trimTiles(); }
+        if (res.ok || (res.type === 'opaque' && req.mode !== 'cors')) { c.put(req, res.clone()); trimTiles(); }
         return res;
       } catch {
         return new Response('', { status: 504 });
