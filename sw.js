@@ -1,6 +1,6 @@
 // 撮影ツール service worker（メニューと全アプリ共通）
 // アプリを追加したら SHELL にそのフォルダのファイルを足し、VERSION を上げる
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP = `app-${VERSION}`;
 const TILES = 'tiles';
 const MAX_TILES = 1500;
