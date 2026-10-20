@@ -380,8 +380,10 @@ function lon2x(l,z){return (l+180)/360*256*Math.pow(2,z)}
 function lat2y(a,z){const r=a*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*256*Math.pow(2,z)}
 function tileUrl(b,z,x,y){return b.url.replace('{s}','a').replace('{z}',z).replace('{x}',x).replace('{y}',y).replace('{r}','')}
 function loadImg(src,cors){return new Promise(r=>{const i=new Image();if(cors)i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
-async function staticMap(p,W,H,z=17,cors=false){
-  const b=BASEMAPS.find(x=>base&&x.url===base._url)||BASEMAPS[0], sc=2;
+async function staticMap(p,W,H,z=17,cors=false,sc=2){
+  const b=BASEMAPS.find(x=>base&&x.url===base._url)||BASEMAPS[0];
+  // 扇形の長さ：地図の高さの約4割に収まるように（最大150m）
+  const mpp=156543.03*Math.cos(p.lat*Math.PI/180)/Math.pow(2,z),R=Math.min(150,0.4*H*mpp);
   const cv=document.createElement('canvas');cv.width=W*sc;cv.height=H*sc;cv.className='rmap';
   const g=cv.getContext('2d');g.scale(sc,sc);g.fillStyle='#dfe5e4';g.fillRect(0,0,W,H);
   const cx=lon2x(p.lng,z),cy=lat2y(p.lat,z),x0=cx-W/2,y0=cy-H/2;
@@ -392,19 +394,20 @@ async function staticMap(p,W,H,z=17,cors=false){
   const px=(la,lo)=>[lon2x(lo,z)-x0,lat2y(la,z)-y0];
   if(p.dir!=null){
     const F=fov(p)||60;g.beginPath();g.moveTo(W/2,H/2);
-    for(let a=-F/2;a<=F/2+0.01;a+=F/24){const[la,lo]=dest(p.lat,p.lng,p.dir+a,150);const[x,y]=px(la,lo);g.lineTo(x,y)}
+    for(let a=-F/2;a<=F/2+0.01;a+=F/24){const[la,lo]=dest(p.lat,p.lng,p.dir+a,R);const[x,y]=px(la,lo);g.lineTo(x,y)}
     g.closePath();g.fillStyle='rgba(214,73,43,.28)';g.fill();g.strokeStyle='#d6492b';g.lineWidth=1;g.stroke();
-    const[la,lo]=dest(p.lat,p.lng,p.dir,400);const[x,y]=px(la,lo);
-    g.setLineDash([6,6]);g.lineWidth=2;g.beginPath();g.moveTo(W/2,H/2);g.lineTo(x,y);g.stroke();g.setLineDash([]);
+    const[la,lo]=dest(p.lat,p.lng,p.dir,Math.max(W,H)*mpp);const[x,y]=px(la,lo);
+    g.setLineDash([6*Math.max(1,W/700),6*Math.max(1,W/700)]);g.lineWidth=2*Math.max(1,W/700);g.beginPath();g.moveTo(W/2,H/2);g.lineTo(x,y);g.stroke();g.setLineDash([]);
   }
-  g.beginPath();g.arc(W/2,H/2,7,0,Math.PI*2);g.fillStyle='#d6492b';g.fill();g.lineWidth=3;g.strokeStyle='#fff';g.stroke();
+  const k=Math.max(1,W/700); // 大きい地図では印や文字も大きく
+  g.beginPath();g.arc(W/2,H/2,7*k,0,Math.PI*2);g.fillStyle='#d6492b';g.fill();g.lineWidth=3*k;g.strokeStyle='#fff';g.stroke();
   // north arrow
-  g.fillStyle='rgba(255,255,255,.9)';g.fillRect(W-40,10,30,40);g.fillStyle='#14262b';
-  g.beginPath();g.moveTo(W-25,16);g.lineTo(W-19,32);g.lineTo(W-31,32);g.closePath();g.fill();
-  g.font='600 11px sans-serif';g.textAlign='center';g.fillText('N',W-25,45);
+  g.fillStyle='rgba(255,255,255,.9)';g.fillRect(W-40*k,10*k,30*k,40*k);g.fillStyle='#14262b';
+  g.beginPath();g.moveTo(W-25*k,16*k);g.lineTo(W-19*k,32*k);g.lineTo(W-31*k,32*k);g.closePath();g.fill();
+  g.font=`600 ${11*k}px sans-serif`;g.textAlign='center';g.fillText('N',W-25*k,45*k);
   const attr=b.src==='Esri'?'Tiles © Esri — Esri, Maxar, Earthstar Geographics':'出典：国土地理院（地理院タイル）';
-  g.font='10px sans-serif';const tw=g.measureText(attr).width+10;
-  g.fillStyle='rgba(255,255,255,.85)';g.fillRect(W-tw,H-16,tw,16);g.fillStyle='#333';g.textAlign='right';g.fillText(attr,W-5,H-4);
+  g.font=`${10*k}px sans-serif`;const tw=g.measureText(attr).width+10*k;
+  g.fillStyle='rgba(255,255,255,.85)';g.fillRect(W-tw,H-16*k,tw,16*k);g.fillStyle='#333';g.textAlign='right';g.fillText(attr,W-5*k,H-4*k);
   return cv;
 }
 function pdfName(p){
@@ -520,73 +523,64 @@ function drawQR(g,url,x,y,size){
 }
 async function buildJpg(p){
   try{await document.fonts.ready}catch(e){}
-  const W=1242,PAD=56,IW=W-PAD*2;
+  // 3024×4032（縦）固定。レイアウトは 1242×1656 で組み、全体を拡大して描く
+  const OUT_W=3024,OUT_H=4032,W=1242,H=1656,S=OUT_W/W,PAD=56,IW=W-PAD*2;
   const FD='"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif',FB='"IBM Plex Sans JP","Hiragino Sans","Yu Gothic",sans-serif',FM='"JetBrains Mono",Menlo,monospace';
   const INK='#14262b',MUTED='#5d6f72',ACC='#d6492b',TEAL='#1f6f78',LINE='#cdd6d5',BG='#eef1f0';
-  // 素材を先に用意
   const photo=p.thumb?await loadImg(p.thumb):null;
-  const mapCv=p.lat!=null?await staticMap(p,IW/2,Math.round(IW*0.62/2),17,true):null;
-  const ph=photo?Math.min(Math.round(IW*photo.naturalHeight/photo.naturalWidth),1500):Math.round(IW*0.5);
-  const mh=mapCv?Math.round(IW*0.62):0;
-  const qrS=220,hasDir=p.dir!=null&&p.lat!=null;
-  // 高さを計算
-  let H=PAD+70+20+110+28;            // タイトル・日時
-  H+=86+28;                           // シーン・カット・テイク
-  H+=ph+18+28;                        // 写真
-  if(mapCv)H+=36+mh+18+60+28;         // 地図＋データ行
-  if(p.lat!=null)H+=qrS+70+28;        // QR
-  H+=40+PAD;
-  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
-  g.fillStyle='#fbfcfb';g.fillRect(0,0,W,H);
-  let y=PAD;
+  const MAPH=430,mapCv=p.lat!=null?await staticMap(p,IW,MAPH,18,true,S):null;
+  const QR=200,hasDir=p.dir!=null&&p.lat!=null;
+  const cv=document.createElement('canvas');cv.width=OUT_W;cv.height=OUT_H;const g=cv.getContext('2d');
+  g.scale(S,S);g.imageSmoothingQuality='high';
+  g.fillStyle='#fbfcfb';g.fillRect(0,0,W,H);g.textBaseline='alphabetic';
+  let y=48;
   // タイトル
-  g.textBaseline='alphabetic';g.fillStyle=INK;g.font=`700 64px ${FD}`;g.fillText('撮影方位',PAD,y+60);
-  const tw=g.measureText('撮影方位').width;g.fillStyle=ACC;g.fillText('レポート',PAD+tw,y+60);
-  g.fillStyle=MUTED;g.font=`400 22px ${FM}`;g.textAlign='right';g.fillText(p.name,W-PAD,y+58);g.textAlign='left';
-  y+=70;g.fillStyle=ACC;g.fillRect(PAD,y+6,IW,4);y+=20;
+  g.fillStyle=INK;g.font=`700 58px ${FD}`;g.fillText('撮影方位',PAD,y+56);
+  const tw=g.measureText('撮影方位').width;g.fillStyle=ACC;g.fillText('レポート',PAD+tw,y+56);
+  g.fillStyle=MUTED;g.font=`400 20px ${FM}`;g.textAlign='right';g.fillText(p.name,W-PAD,y+54);g.textAlign='left';
+  y+=70;g.fillStyle=ACC;g.fillRect(PAD,y,IW,4);y+=14;
   // 日時
   const j=jpDate(p.date);
-  if(j){g.fillStyle=MUTED;g.font=`500 34px ${FB}`;g.fillText(j.day,PAD,y+88);const dw=g.measureText(j.day).width;
-    g.fillStyle=INK;g.font=`600 112px ${FM}`;g.fillText(j.hm,PAD+dw+36,y+96);const hw=g.measureText(j.hm).width;
-    g.fillStyle=MUTED;g.font=`600 52px ${FM}`;g.fillText(j.s,PAD+dw+36+hw,y+96)}
-  else{g.fillStyle=MUTED;g.font=`500 34px ${FB}`;g.fillText('撮影日時の記録なし',PAD,y+80)}
-  y+=110+28;
+  if(j){g.fillStyle=MUTED;g.font=`500 30px ${FB}`;g.fillText(j.day,PAD,y+78);const dw=g.measureText(j.day).width;
+    g.fillStyle=INK;g.font=`600 96px ${FM}`;g.fillText(j.hm,PAD+dw+30,y+86);const hw=g.measureText(j.hm).width;
+    g.fillStyle=MUTED;g.font=`600 46px ${FM}`;g.fillText(j.s,PAD+dw+30+hw,y+86)}
+  else{g.fillStyle=MUTED;g.font=`500 30px ${FB}`;g.fillText('撮影日時の記録なし',PAD,y+70)}
+  y+=104;
   // シーン・カット・テイク・メモ
-  const cells=[['シーン',p.scene],['カット',p.cut],['テイク',p.take]],cw=200;
-  g.strokeStyle=INK;g.lineWidth=3;g.strokeRect(PAD,y,IW,86);
-  cells.forEach(([k,v],i)=>{const x=PAD+i*cw;if(i)g.fillRect(x,y,2,86);
-    g.fillStyle=MUTED;g.font=`500 18px ${FB}`;g.fillText(k,x+16,y+26);g.fillStyle=INK;g.font=`600 40px ${FM}`;g.fillText(String(v||''),x+16,y+72)});
-  g.fillStyle=INK;g.fillRect(PAD+3*cw,y,2,86);
-  g.fillStyle=MUTED;g.font=`500 18px ${FB}`;g.fillText('メモ',PAD+3*cw+16,y+26);
-  g.fillStyle=INK;g.font=`500 24px ${FB}`;wrapText(g,String(p.memo||''),IW-3*cw-32).slice(0,2).forEach((l,i)=>g.fillText(l,PAD+3*cw+16,y+56+i*28));
-  y+=86+28;
-  // 写真
-  g.fillStyle=BG;g.fillRect(PAD,y,IW,ph);
-  if(photo){const r=Math.min(IW/photo.naturalWidth,ph/photo.naturalHeight),dw=photo.naturalWidth*r,dh=photo.naturalHeight*r;g.drawImage(photo,PAD+(IW-dw)/2,y+(ph-dh)/2,dw,dh)}
-  else{g.fillStyle=MUTED;g.font=`500 26px ${FB}`;g.textAlign='center';g.fillText('プレビューなし',W/2,y+ph/2);g.textAlign='left'}
-  y+=ph+18;g.fillStyle=MUTED;g.font=`500 20px ${FB}`;g.fillText('撮影した写真',PAD,y+4);y+=28;
+  const SH=80,cw=180;g.strokeStyle=INK;g.lineWidth=3;g.strokeRect(PAD,y,IW,SH);
+  [['シーン',p.scene],['カット',p.cut],['テイク',p.take]].forEach(([k,v],i)=>{const x=PAD+i*cw;if(i){g.fillStyle=INK;g.fillRect(x,y,2,SH)}
+    g.fillStyle=MUTED;g.font=`500 17px ${FB}`;g.fillText(k,x+14,y+24);g.fillStyle=INK;g.font=`600 38px ${FM}`;g.fillText(String(v||''),x+14,y+66)});
+  g.fillStyle=INK;g.fillRect(PAD+3*cw,y,2,SH);g.fillStyle=MUTED;g.font=`500 17px ${FB}`;g.fillText('メモ',PAD+3*cw+14,y+24);
+  g.fillStyle=INK;g.font=`500 22px ${FB}`;wrapText(g,String(p.memo||''),IW-3*cw-28).slice(0,2).forEach((l,i)=>g.fillText(l,PAD+3*cw+14,y+50+i*26));
+  y+=SH+20;
+  // 写真（残りの高さから決める）
+  const tail=MAPH+30+46+QR+24+40+48;           // 地図・データ行・QR・下余白
+  const PH=Math.max(300,H-y-30-tail);
+  drawContain(g,photo,PAD,y,IW,PH,BG);
+  if(!photo){g.fillStyle=MUTED;g.font=`500 26px ${FB}`;g.textAlign='center';g.fillText('プレビューなし',W/2,y+PH/2);g.textAlign='left'}
+  y+=PH+6;g.fillStyle=MUTED;g.font=`500 18px ${FB}`;g.fillText('撮影した写真',PAD,y+18);y+=30;
   // 地図
-  if(mapCv){
-    const bm=BASEMAPS.find(x=>base&&x.url===base._url)||BASEMAPS[0];
-    g.fillStyle=MUTED;g.font=`500 22px ${FB}`;g.fillText(`地図：${bm.label}（${bm.src}）　扇形＝画角／破線＝カメラの向き`,PAD,y+24);y+=36;
-    g.drawImage(mapCv,PAD,y,IW,mh);g.strokeStyle=LINE;g.lineWidth=2;g.strokeRect(PAD,y,IW,mh);y+=mh+18;
-    g.fillStyle=INK;g.font=`600 30px ${FM}`;
+  if(mapCv){g.drawImage(mapCv,PAD,y,IW,MAPH);g.strokeStyle=LINE;g.lineWidth=2;g.strokeRect(PAD,y,IW,MAPH)}
+  else{g.fillStyle=BG;g.fillRect(PAD,y,IW,MAPH);g.fillStyle=MUTED;g.font=`500 26px ${FB}`;g.textAlign='center';g.fillText('位置情報がないため地図はありません',W/2,y+MAPH/2);g.textAlign='left'}
+  y+=MAPH+6;
+  const bm=BASEMAPS.find(x=>base&&x.url===base._url)||BASEMAPS[0];
+  g.fillStyle=MUTED;g.font=`500 18px ${FB}`;g.fillText(`地図：${bm.label}（${bm.src}）　扇形＝画角／破線＝カメラの向き`,PAD,y+18);y+=30;
+  // データ行
+  if(p.lat!=null){g.fillStyle=INK;g.font=`600 28px ${FM}`;
     const parts=[];if(p.dir!=null)parts.push(`${p.dir.toFixed(1)}° ${dirName(p.dir)}${p.magDir!=null?'（真北）':''}`);parts.push(`${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`);
-    g.fillText(parts.join('　'),PAD,y+40);y+=60+28;
-  }
-  // QRコード
+    g.fillText(parts.join('　'),PAD,y+30)}
+  y+=46;
+  // QRコード（ラベルは右横）
   if(p.lat!=null){
-    // QR用は短いURL（点の数が少なくなる）
     const ll=`${p.lat.toFixed(5)},${p.lng.toFixed(5)}`;
     const items=[['Googleマップ',`https://maps.google.com/?q=${ll}`]];
     if(hasDir)items.push(['ストリートビュー（同じ向き）',`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${ll}&heading=${Math.round(p.dir)}`]);
-    items.forEach(([label,url],i)=>{const x=PAD+i*440;
-      drawQR(g,url,x,y,qrS);g.strokeStyle=LINE;g.lineWidth=2;g.strokeRect(x,y,qrS,qrS);
-      g.fillStyle=TEAL;g.font=`700 28px ${FB}`;g.fillText(label,x,y+qrS+44)});
-    y+=qrS+70+28;
+    items.forEach(([label,url],i)=>{const x=PAD+i*480;
+      drawQR(g,url,x,y,QR);g.strokeStyle=LINE;g.lineWidth=2;g.strokeRect(x,y,QR,QR);
+      g.fillStyle=TEAL;g.font=`700 26px ${FB}`;const lines=label==='Googleマップ'?['Googleマップ']:['ストリートビュー','（同じ向き）'];
+      lines.forEach((l,k)=>g.fillText(l,x+QR+18,y+QR/2+4+(k-(lines.length-1)/2)*34))});
   }
-  g.fillStyle=MUTED;g.font=`400 18px ${FB}`;
-  g.fillText(`作成 ${fmtDate(new Date())}　撮影方位レポート`,PAD,H-PAD+10);
+  g.fillStyle=MUTED;g.font=`400 16px ${FB}`;g.fillText(`作成 ${fmtDate(new Date())}　撮影方位レポート`,PAD,H-30);
   return await new Promise((res,rej)=>{try{cv.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',0.9)}catch(e){rej(e)}});
 }
 async function exportJpg(){
