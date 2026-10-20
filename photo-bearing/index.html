@@ -514,7 +514,7 @@ $('#pdf').onclick=()=>exportPdf();
 function cssVar(n,fb){return (getComputedStyle(document.documentElement).getPropertyValue(n)||'').trim()||fb}
 function wrapText(g,t,maxW){const out=[];let line='';for(const ch of t){if(g.measureText(line+ch).width>maxW&&line){out.push(line);line=ch}else line+=ch}if(line)out.push(line);return out}
 function drawQR(g,url,x,y,size){
-  const q=qrcode(0,'M');q.addData(url);q.make();const n=q.getModuleCount(),quiet=2,cell=size/(n+quiet*2);
+  const q=qrcode(0,'L');q.addData(url);q.make();const n=q.getModuleCount(),quiet=2,cell=size/(n+quiet*2);
   g.fillStyle='#fff';g.fillRect(x,y,size,size);g.fillStyle='#14262b';
   for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))g.fillRect(x+(c+quiet)*cell,y+(r+quiet)*cell,Math.ceil(cell),Math.ceil(cell));
 }
@@ -528,7 +528,7 @@ async function buildJpg(p){
   const mapCv=p.lat!=null?await staticMap(p,IW/2,Math.round(IW*0.62/2),17,true):null;
   const ph=photo?Math.min(Math.round(IW*photo.naturalHeight/photo.naturalWidth),1500):Math.round(IW*0.5);
   const mh=mapCv?Math.round(IW*0.62):0;
-  const qrS=360,hasDir=p.dir!=null&&p.lat!=null;
+  const qrS=220,hasDir=p.dir!=null&&p.lat!=null;
   // 高さを計算
   let H=PAD+70+20+110+28;            // タイトル・日時
   H+=86+28;                           // シーン・カット・テイク
@@ -576,8 +576,11 @@ async function buildJpg(p){
   }
   // QRコード
   if(p.lat!=null){
-    const items=[['Googleマップ',gmapUrl(p)]];if(hasDir)items.push(['ストリートビュー（同じ向き）',svUrl(p)]);
-    items.forEach(([label,url],i)=>{const x=PAD+i*(qrS+56);
+    // QR用は短いURL（点の数が少なくなる）
+    const ll=`${p.lat.toFixed(5)},${p.lng.toFixed(5)}`;
+    const items=[['Googleマップ',`https://maps.google.com/?q=${ll}`]];
+    if(hasDir)items.push(['ストリートビュー（同じ向き）',`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${ll}&heading=${Math.round(p.dir)}`]);
+    items.forEach(([label,url],i)=>{const x=PAD+i*440;
       drawQR(g,url,x,y,qrS);g.strokeStyle=LINE;g.lineWidth=2;g.strokeRect(x,y,qrS,qrS);
       g.fillStyle=TEAL;g.font=`700 28px ${FB}`;g.fillText(label,x,y+qrS+44)});
     y+=qrS+70+28;
