@@ -44,7 +44,8 @@ h1 span{color:var(--accent)}
 .drop{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;border:1.5px dashed var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);transition:border-color .15s,background .15s}
 .btn#shoot{background:var(--teal)}
 .cam{position:fixed;inset:0;z-index:5000;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--f-body)}
-.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam video{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:auto;max-height:100%;aspect-ratio:3/4;object-fit:cover;background:#000}
+@media (orientation:landscape){.cam video{width:auto;height:100%;max-width:100%;aspect-ratio:4/3}}
 .camtop,.cambottom,.camhud{position:relative;z-index:1}
 .camtop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(0,0,0,.55),transparent)}
 .camchips{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
@@ -837,7 +838,7 @@ async function openCamera(mode){
       {enableHighAccuracy:true,maximumAge:0,timeout:30000});
   }
   try{
-    C.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:4032},height:{ideal:3024}}});
+    C.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:4032},height:{ideal:3024},aspectRatio:{ideal:4/3}}});
     const v=$('#camvideo');v.srcObject=C.stream;await v.play().catch(()=>{});
   }catch(e){camMsg('カメラを起動できませんでした。設定でSafariのカメラを許可してください。<br><small>'+esc(e.name||e)+'</small>')}
   cancelAnimationFrame(camRAF);camLoop();
@@ -853,19 +854,25 @@ function closeCamera(){
 function rat(v,den){return [Math.round(v*den),den]}
 function dms(v){v=Math.abs(v);const d=Math.floor(v),mf=(v-d)*60,m=Math.floor(mf),sec=(mf-m)*60;return [[d,1],[m,1],[Math.round(sec*1000),1000]]}
 function exifDate(d){const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}:${z(d.getMonth()+1)}:${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`}
+/* iPhoneの標準カメラと同じ 3:4（縦）/ 4:3（横）に中央で切り出す */
+function grabFrame(v){
+  const vw=v.videoWidth,vh=v.videoHeight,portrait=innerHeight>=innerWidth,ratio=portrait?3/4:4/3; // 画面の向きに合わせる（プレビューと同じ切り出し）
+  let sw=vw,sh=vh;if(vw/vh>ratio)sw=Math.round(vh*ratio);else sh=Math.round(vw/ratio);
+  const cv=document.createElement('canvas');cv.width=sw;cv.height=sh;
+  cv.getContext('2d').drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,sw,sh);return cv;
+}
 async function takeShot(){
   if(C.busy)return;const v=$('#camvideo');if(!v.videoWidth){camMsg('カメラの準備中です。少し待ってからもう一度押してください。');return}
   C.busy=true;$('#shutter').disabled=true;
   if(C.mode==='setup'){
-    const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);
+    const cv=grabFrame(v);
     cv.toBlob(b=>{C.busy=false;$('#shutter').disabled=false;if(b)setSetup(new File([b],'setup.jpg',{type:'image/jpeg'}));closeCamera()},'image/jpeg',0.9);
     return;
   }
   const now=new Date(),head=C.head,hacc=C.hacc,pos=C.pos?{...C.pos}:null; // 押した瞬間の値
   const f=$('#camflash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),60);
   try{
-    const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;
-    cv.getContext('2d').drawImage(v,0,0);
+    const cv=grabFrame(v);
     const jpeg=cv.toDataURL('image/jpeg',0.92);
     const iPhone=/iPhone/.test(navigator.userAgent);
     const zeroth={},ex={},gps={};
