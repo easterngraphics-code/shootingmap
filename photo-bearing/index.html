@@ -231,7 +231,6 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
     <div class="strip" id="strip" aria-label="読み込んだ写真"></div>
     <div class="pdfbox">
       <button class="btn ghost" type="button" id="pdf">PDFで書き出す</button>
-      <button class="linkbtn" type="button" id="pdfall">全部まとめて書き出す</button>
       <span class="pdfname" id="pdfname"></span>
     </div>
   </div>
@@ -477,14 +476,13 @@ async function buildReport(only){
   }
   await Promise.all([...rep.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})));
 }
-async function exportPdf(all){
+async function exportPdf(){
   const p=photos[active];if(!p)return;
-  const b=all?$('#pdfall'):$('#pdf'),label=b.textContent;b.disabled=true;b.textContent='準備中…';$('#pdfhint').hidden=false;
+  const b=$('#pdf'),label=b.textContent;b.disabled=true;b.textContent='準備中…';$('#pdfhint').hidden=false;
   const prev=document.title;
   let name=pdfName(p);
-  if(all&&photos.length>1)name+=`_ほか${photos.length-1}枚`;
   try{
-    await buildReport(all?null:p);
+    await buildReport(p);
     document.title=name;            // 保存時のファイル名になる
     window.print();
   }finally{
@@ -493,8 +491,8 @@ async function exportPdf(all){
     window.addEventListener('afterprint',restore);setTimeout(restore,120000);
   }
 }
-$('#pdf').onclick=()=>exportPdf(false);
-$('#pdfall').onclick=()=>exportPdf(true);
+$('#pdf').onclick=()=>exportPdf();
+
 
 /* map */
 function dest(lat,lng,brg,m){const R=6378137,d=m/R,b=brg*Math.PI/180,p1=lat*Math.PI/180,l1=lng*Math.PI/180;
