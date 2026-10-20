@@ -240,7 +240,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
   <div class="main">
     <div class="leftcol">
       <section class="panel shot" id="shot" aria-label="撮影した写真"></section>
-      <section class="panel setup" id="setup" aria-label="撮影風景"></section>
+      <section class="panel setup" id="setup" aria-label="メモ用他の写真"></section>
     </div>
     <section class="panel" id="info" aria-live="polite"></section>
   </div>
@@ -264,7 +264,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
   <video id="camvideo" playsinline muted autoplay></video>
   <div class="camtop">
     <button type="button" class="cambtn" id="camclose">閉じる</button>
-    <span class="camtitle">撮影風景を撮る</span>
+    <span class="camtitle">メモ用の写真を撮る</span>
     <div class="camchips"><span class="camchip" id="camgps">GPS 取得中…</span><span class="camchip" id="camcmp">方位センサー待ち</span></div>
   </div>
   <div class="camhud" aria-live="off">
@@ -383,15 +383,15 @@ function renderStrip(){
 }
 
 
-/* 撮影風景（カメラを写した写真） */
+/* メモ用他の写真 */
 function renderSetup(){
   const p=photos[active],el=$('#setup');
-  let h=`<div class="setuphead"><h2>撮影風景</h2><span>カメラを設置した様子</span></div>`;
+  let h=`<div class="setuphead"><h2>メモ用他の写真</h2></div>`;
   if(p&&p.setup){
-    h+=`<img class="setupimg" src="${p.setup}" alt="撮影風景">`;
+    h+=`<img class="setupimg" src="${p.setup}" alt="メモ用他の写真">`;
     h+=`<div class="setupbtns"><button class="mini" type="button" id="setupshoot">撮り直す</button><label class="mini" for="setupfile">選び直す</label><button class="mini" type="button" id="setupdel">外す</button></div>`;
   }else{
-    h+=`<div class="setupdrop"><b>カメラを写した写真を追加</b><div class="setupbtns2"><button class="btn" type="button" id="setupshoot" style="background:var(--teal)">写真を撮る</button><label class="btn" for="setupfile">写真を選ぶ</label></div><span>ここにドロップもできます</span></div>`;
+    h+=`<div class="setupdrop"><b>写真を追加</b><div class="setupbtns2"><button class="btn" type="button" id="setupshoot" style="background:var(--teal)">写真を撮る</button><label class="btn" for="setupfile">写真を選ぶ</label></div><span>ここにドロップもできます</span></div>`;
   }
   h+=`<input type="file" id="setupfile" accept="image/*,.heic,.heif">`;
   el.innerHTML=h;
@@ -455,7 +455,7 @@ async function buildReport(only){
     h+=`<div class="rdatebig">${dateHTML(p.date)}</div>`;
     h+=`<div class="rslate"><div><span>シーン</span><b>${esc(p.scene||'')}</b></div><div><span>カット</span><b>${esc(p.cut||'')}</b></div><div><span>テイク</span><b>${esc(p.take||'')}</b></div><div class="wide"><span>メモ</span><b>${esc(p.memo||'')}</b></div></div>`;
     h+=`<div class="rbody"><div class="rimgs"><figure>${p.thumb?`<img src="${p.thumb}" alt="">`:'<div class="rnone">プレビューなし</div>'}<figcaption>撮影した写真</figcaption></figure>`;
-    h+=`<figure>${p.setup?`<img src="${p.setup}" alt="">`:'<div class="rnone">撮影風景の写真なし</div>'}<figcaption>撮影風景</figcaption></figure></div>`;
+    h+=`<figure>${p.setup?`<img src="${p.setup}" alt="">`:'<div class="rnone">メモ用の写真なし</div>'}<figcaption>メモ用他の写真</figcaption></figure></div>`;
     h+=`<div class="rmapbox"></div></div>`;
     h+=`<div class="rdata"><dl>`;
     if(p.dir!=null) h+=`<dt>カメラの向き</dt><dd><b>${p.dir.toFixed(1)}°</b> ${dirName(p.dir)}（${p.magDir!=null?`真北基準・磁北 ${p.magDir.toFixed(1)}° から補正`:(p.ref==='M'?'磁北基準':'真北基準')}）</dd>`;
