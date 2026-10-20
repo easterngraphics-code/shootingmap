@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>撮影ツール</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="撮影ツール">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#14262b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column of app rows, icon at left, name + use case at right */
+:root{
+  --bg:#eef1f0; --surface:#fbfcfb; --ink:#14262b; --muted:#5d6f72; --line:#cdd6d5;
+  --accent:#d6492b; --teal:#1f6f78; --teal-soft:rgba(31,111,120,.1);
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"IBM Plex Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1a1d; --surface:#152428; --ink:#e3ecea; --muted:#8fa3a5; --line:#2a3d41;
+  --accent:#f0704f; --teal:#5fb7bf; --teal-soft:rgba(95,183,191,.12); color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);margin:0}
+body{font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 40px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font:700 clamp(26px,6vw,34px)/1.2 var(--f-display);margin:0;letter-spacing:.03em}
+.sub{margin:4px 0 0;color:var(--muted);font-size:13px}
+.apps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.app{display:flex;align-items:center;gap:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s}
+.app:hover{border-color:var(--teal);background:var(--teal-soft)}
+.app:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.app img{width:60px;height:60px;border-radius:14px;flex:0 0 auto}
+.app .txt{min-width:0;flex:1}
+.app h2{font:700 17px var(--f-display);margin:0}
+.app p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.app .go{font-size:22px;color:var(--muted);flex:0 0 auto}
+.foot{font-size:12px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>撮影ツール</h1>
+    <p class="sub">現場で使うツールの一覧です。タップして開きます。</p>
+  </header>
+
+  <ul class="apps" id="apps"></ul>
+
+  <p class="foot">iPhoneでは共有ボタン →「ホーム画面に追加」で、このメニューをアプリとして置けます。各ツールを開いた画面で追加すると、そのツールだけのアイコンも作れます。</p>
+</div>
+
+<script>
+/* アプリを増やすときは、フォルダを作ってここに1行追加する */
+const APPS = [
+  { href: 'photo-bearing/', icon: 'photo-bearing/icons/icon-180.png',
+    name: '撮影方位レポート',
+    desc: 'iPhone写真のEXIFから撮影地点とカメラの向きを地図に表示し、PDFにまとめる' },
+];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+document.getElementById('apps').innerHTML = APPS.map(a =>
+  `<li><a class="app" href="${esc(a.href)}"><img src="${esc(a.icon)}" alt=""><div class="txt"><h2>${esc(a.name)}</h2><p>${esc(a.desc)}</p></div><span class="go" aria-hidden="true">›</span></a></li>`
+).join('');
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

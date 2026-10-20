@@ -1,0 +1,31 @@
+{
+  "name": "撮影方位レポート",
+  "short_name": "撮影方位",
+  "description": "iPhone写真のEXIFから撮影地点とカメラの向きを地図に表示し、PDFレポートにまとめます。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#14262b",
+  "theme_color": "#14262b",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./"
+}
