@@ -68,7 +68,6 @@ h1 span{color:var(--accent)}
 .shutter:disabled{opacity:.4}
 .camflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
 .camflash.on{opacity:.8;transition:none}
-.savebtn{font:600 13px var(--f-body);color:var(--teal);background:transparent;border:1px solid var(--teal);border-radius:8px;padding:7px 12px;cursor:pointer}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
 .drop p{margin:0;flex:1 1 220px;min-width:0;color:var(--muted);font-size:13px}
 .drop p b{color:var(--ink);font-weight:600}
@@ -98,6 +97,11 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 .links a{font:600 13px var(--f-body);color:var(--teal);text-decoration:none;border:1px solid var(--teal);border-radius:8px;padding:7px 12px}
 .links a:hover{background:var(--teal-soft)}
+.maplinks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.maplinks a{font:600 13px var(--f-body);color:var(--teal);text-decoration:none;border:1px solid var(--teal);border-radius:8px;padding:7px 12px}
+.maplinks a:hover{background:var(--teal-soft)}
+.copybtn{font:600 13px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.copied{font-size:12px;color:var(--muted)}
 .copyrow{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;color:var(--muted)}
 .copyrow button{font:500 12px var(--f-body);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
 .basemaps{display:flex;flex-wrap:wrap;gap:6px}
@@ -248,6 +252,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
           <div class="links" id="faillinks"></div>
         </div>
       </div>
+      <div class="maplinks" id="maplinks"></div>
     </div>
 
     <section class="panel" id="info" aria-live="polite"></section>
@@ -350,18 +355,16 @@ function renderInfo(){
   if(p.acc!=null) h+=`<dt>測位誤差</dt><dd>±${p.acc.toFixed(1)} m</dd>`;
   if(p.model) h+=`<dt>機種</dt><dd>${esc(p.model)}${p.lens?' / '+esc(p.lens):''}</dd>`;
   h+=`</dl>`;
-  if(p.lat!=null){
-    h+=`<div class="links">${links(p)}</div>`;
-    h+=`<div class="copyrow"><button type="button" id="copy">座標をコピー</button><span id="copied"></span></div>`;
-    if(p.file) h+=`<div class="links"><button type="button" class="savebtn" id="savephoto">写真を保存（位置・方位入り）</button></div>`;
-  } else {
+  if(p.lat==null){
     h+=`<p class="note" style="margin-top:12px">この写真にはGPS情報が含まれていません。iPhoneの写真選択時に位置情報が外された可能性があります（下の注記を参照）。</p>`;
   }
   el.innerHTML=h;
   el.querySelectorAll('.slate input').forEach(i=>i.oninput=()=>{p[i.dataset.k]=i.value;if(i.dataset.k!=='memo')lastSlate[i.dataset.k]=i.value;updatePdfName()});
   updatePdfName();
   renderDate(p);renderShot(p);
-  const sv=$('#savephoto');if(sv)sv.onclick=()=>savePhoto(p);
+  const ml=$('#maplinks');
+  ml.innerHTML=p.lat!=null?`${links(p)}<button type="button" class="copybtn" id="copy">座標をコピー</button><span class="copied" id="copied"></span>`:'';
+  ml.hidden=p.lat==null;
   const cb=$('#copy');
   if(cb) cb.onclick=()=>{const t=`${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
     const ok=()=>{$('#copied').textContent='コピーしました'};
@@ -798,12 +801,6 @@ async function takeShot(){
     return;
   }catch(e){camMsg('保存に失敗しました：'+esc(e.message||e))}
   C.busy=false;$('#shutter').disabled=false;
-}
-async function savePhoto(p){
-  try{
-    if(navigator.canShare&&navigator.canShare({files:[p.file]})){await navigator.share({files:[p.file]});return}
-  }catch(e){if(e.name==='AbortError')return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(p.file);a.download=p.name;document.body.appendChild(a);a.click();a.remove();
 }
 $('#shoot').onclick=e=>{e.preventDefault();e.stopPropagation();openCamera('shot')};
 $('#shutter').onclick=takeShot;
