@@ -854,12 +854,15 @@ function closeCamera(){
 function rat(v,den){return [Math.round(v*den),den]}
 function dms(v){v=Math.abs(v);const d=Math.floor(v),mf=(v-d)*60,m=Math.floor(mf),sec=(mf-m)*60;return [[d,1],[m,1],[Math.round(sec*1000),1000]]}
 function exifDate(d){const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}:${z(d.getMonth()+1)}:${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`}
-/* iPhoneの標準カメラと同じ 3:4（縦）/ 4:3（横）に中央で切り出す */
+/* 3:4（縦）/ 4:3（横）に中央で切り出し、1932×2576 にそろえる */
 function grabFrame(v){
   const vw=v.videoWidth,vh=v.videoHeight,portrait=innerHeight>=innerWidth,ratio=portrait?3/4:4/3; // 画面の向きに合わせる（プレビューと同じ切り出し）
   let sw=vw,sh=vh;if(vw/vh>ratio)sw=Math.round(vh*ratio);else sh=Math.round(vw/ratio);
-  const cv=document.createElement('canvas');cv.width=sw;cv.height=sh;
-  cv.getContext('2d').drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,sw,sh);return cv;
+  // 出力は常に 1932×2576（横持ちは 2576×1932）
+  const OW=portrait?1932:2576,OH=portrait?2576:1932;
+  const cv=document.createElement('canvas');cv.width=OW;cv.height=OH;const g=cv.getContext('2d');
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  g.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,OW,OH);return cv;
 }
 async function takeShot(){
   if(C.busy)return;const v=$('#camvideo');if(!v.videoWidth){camMsg('カメラの準備中です。少し待ってからもう一度押してください。');return}
