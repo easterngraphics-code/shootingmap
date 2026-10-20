@@ -146,44 +146,6 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
 .setupdrop:hover{border-color:var(--accent)}
 .setupbtns{display:flex;gap:8px}
 .mini{font:500 12px var(--f-body);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:5px 12px;cursor:pointer}
-#report{display:none}
-@media print{
-  /* A4 portrait, 10mm margins → 190×277mm usable. One photo = exactly one page. */
-  @page{size:A4 portrait;margin:10mm}
-  html,body{background:#fff!important;color:#14262b!important;padding:0!important;margin:0!important}
-  :root{padding:0!important}
-  .wrap{display:none!important}
-  #report{display:block;font-family:var(--f-body);color:#14262b;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .rpage{width:190mm;height:272mm;overflow:hidden;display:flex;flex-direction:column;gap:3mm;break-after:page;break-inside:avoid;page-break-after:always}
-  .rpage:last-child{break-after:auto;page-break-after:auto}
-  .rhead{flex:0 0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2px solid #d6492b;padding-bottom:1.5mm}
-  .rhead h1{font:700 20px/1.2 var(--f-display);margin:0;letter-spacing:.04em}
-  .rhead p{margin:0;font-size:8px;line-height:1.4;color:#5d6f72;text-align:right;word-break:break-all;font-family:var(--f-mono)}
-  .rdatebig{flex:0 0 auto;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-  .rdatebig .day{font:500 13px var(--f-body)}
-  .rdatebig .time{font:600 30px/1 var(--f-mono);letter-spacing:-.02em}
-  .rdatebig .time small{font-size:.5em;color:#5d6f72}
-  .rslate{display:grid;grid-template-columns:22mm 22mm 22mm 1fr;border:1.5px solid #14262b;border-radius:4px}
-  .rslate div{padding:1mm 2.5mm;border-left:1px solid #14262b;display:flex;flex-direction:column;min-height:11mm;min-width:0}
-  .rslate div:first-child{border-left:0}
-  .rslate span{font-size:7px;letter-spacing:.1em;color:#5d6f72}
-  .rslate b{font:600 16px/1.2 var(--f-mono);word-break:break-word}
-  .rslate .wide b{font:500 10px/1.35 var(--f-body);overflow:hidden;max-height:7.5mm}
-  .rfig{flex:0 0 auto;margin:0;display:flex;flex-direction:column;min-height:0}
-  .rphoto{height:70mm}.rmapfig{height:68mm}.rmemo{flex:1 1 auto;min-height:40mm}
-  .rfig>img,.rfig .rnone,.rmapbox{flex:1 1 auto;min-height:0;width:100%;height:100%;object-fit:contain;background:#eef1f0;border-radius:4px}
-  .rnone{display:flex;align-items:center;justify-content:center;font-size:10px;color:#5d6f72}
-  figcaption{flex:0 0 auto;font-size:8px;color:#5d6f72;margin-top:1mm}
-  .rmapbox{display:flex;overflow:hidden}
-  .rmap{width:100%;height:100%;object-fit:cover;border-radius:4px;display:block}
-  .rinfo{flex:0 0 auto;display:flex;flex-direction:column;gap:2mm}
-  .rdata{flex:0 0 auto;display:flex;flex-direction:column;gap:2mm}
-  .rdata dl{display:grid;grid-template-columns:auto 1fr auto 1fr auto 1fr;gap:1mm 4mm;margin:0;font-size:9px;line-height:1.4}
-  .rdata dt{color:#5d6f72;white-space:nowrap}.rdata dd{margin:0;font-family:var(--f-mono);min-width:0}
-  .rlinks{font-size:8px;line-height:1.35;display:flex;flex-direction:column;gap:1mm;margin:0}
-  .rlinks p{margin:0}
-  .rlinks a{color:#1f6f78;word-break:break-all}
-}
 .mapbox{position:relative;height:clamp(280px,48vw,440px);border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
 #map{position:absolute;inset:0}
 .mapfail{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;background:var(--surface);z-index:2000;color:var(--muted);font-size:13px}
@@ -241,7 +203,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
       <span class="pdfname" id="pdfname"></span>
     </div>
   </div>
-  <p class="pdfhint" id="pdfhint" hidden>印刷画面が開いたら「PDFとして保存」を選んでください（iPhoneは共有ボタン →「ファイルに保存」）。ファイル名は上に表示した名前になります。</p>
+  <p class="pdfhint" id="pdfhint" hidden></p>
 
   <div class="main">
     <section class="panel shot" id="shot" aria-label="撮影した写真"></section>
@@ -266,7 +228,6 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
   <p class="note">向きはEXIFの <b>GPSImgDirection</b>（撮影時にカメラが向いていた方位）を使います。画角は35mm換算焦点距離から計算しています。位置情報が見つからない場合は、iPhoneの写真選択画面の「オプション」で<b>位置情報</b>をオンにするか、写真を一度「ファイル」に保存してから選んでください。</p>
 </div>
 
-<div id="report" aria-hidden="true"></div>
 
 <div class="cam" id="cam" hidden role="dialog" aria-modal="true" aria-label="カメラ">
   <video id="camvideo" playsinline muted autoplay></video>
@@ -293,6 +254,7 @@ dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;word-bre
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
 const $=s=>document.querySelector(s);
@@ -412,7 +374,7 @@ function setSetup(f){const p=photos[active];if(!p)return;p.setup=URL.createObjec
  ['dragleave','drop'].forEach(t=>el.addEventListener(t,e=>{e.preventDefault();el.classList.remove('over')}));
  el.addEventListener('drop',e=>{const f=[...e.dataTransfer.files].find(f=>/image|heic|heif/i.test(f.type)||/\.(heic|heif|jpe?g|png)$/i.test(f.name));if(f)setSetup(f)});}
 
-/* PDF レポート（印刷→PDF保存） */
+/* 地図画像・ファイル名（PDF/JPG共通） */
 function lon2x(l,z){return (l+180)/360*256*Math.pow(2,z)}
 function lat2y(a,z){const r=a*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*256*Math.pow(2,z)}
 function tileUrl(b,z,x,y){return b.url.replace('{s}','a').replace('{z}',z).replace('{x}',x).replace('{y}',y).replace('{r}','')}
@@ -452,57 +414,99 @@ function pdfName(p){
   return sc?`${n}_${sc}`:n;
 }
 function updatePdfName(){const p=photos[active];const el=$('#pdfname');if(el)el.textContent=p?`${pdfName(p)}.pdf / .jpg`:''}
-async function buildReport(only){
-  const rep=$('#report');rep.innerHTML='';
-  const list=only?[only]:photos;
-  const made=fmtDate(new Date());
-  for(const p of list){
-    const F=fov(p),pg=document.createElement('section');pg.className='rpage';
-    let h=`<header class="rhead"><h1>撮影方位レポート</h1><p>${esc(p.name)}<br>作成 ${made}</p></header>`;
-    h+=`<div class="rdatebig">${dateHTML(p.date)}</div>`;
-    // 1. 撮影した写真
-    h+=`<figure class="rfig rphoto">${p.thumb?`<img src="${p.thumb}" alt="">`:'<div class="rnone">プレビューなし</div>'}<figcaption>撮影した写真</figcaption></figure>`;
-    // 2. 地図
-    h+=`<figure class="rfig rmapfig"><div class="rmapbox">${p.lat==null?'<div class="rnone">位置情報がないため地図はありません</div>':''}</div><figcaption>地図（扇形はカメラの画角、破線はカメラの向き）</figcaption></figure>`;
-    // 3. シーン・カット・テイクと情報
-    h+=`<div class="rinfo"><div class="rslate"><div><span>シーン</span><b>${esc(p.scene||'')}</b></div><div><span>カット</span><b>${esc(p.cut||'')}</b></div><div><span>テイク</span><b>${esc(p.take||'')}</b></div><div class="wide"><span>メモ</span><b>${esc(p.memo||'')}</b></div></div>`;
-    h+=`<div class="rdata"><dl>`;
-    if(p.dir!=null) h+=`<dt>カメラの向き</dt><dd><b>${p.dir.toFixed(1)}°</b> ${dirName(p.dir)}（${p.magDir!=null?`真北・磁北 ${p.magDir.toFixed(1)}° から補正`:(p.ref==='M'?'磁北':'真北')}）</dd>`;
-    if(p.lat!=null) h+=`<dt>緯度・経度</dt><dd>${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</dd>`;
-    if(F) h+=`<dt>水平画角</dt><dd>${F.toFixed(1)}°（${p.f35}mm 換算${p.portrait?'・縦位置':''}）</dd>`;
-    if(p.alt!=null) h+=`<dt>高度</dt><dd>${p.alt.toFixed(1)} m</dd>`;
-    if(p.acc!=null) h+=`<dt>測位誤差</dt><dd>±${p.acc.toFixed(1)} m</dd>`;
-    if(p.model) h+=`<dt>機種</dt><dd>${esc(p.model)}${p.lens?' / '+esc(p.lens):''}</dd>`;
-    h+=`</dl>`;
-    if(p.lat!=null){
-      h+=`<div class="rlinks"><p><b>Googleマップ</b> <a href="${gmapUrl(p)}">${esc(gmapUrl(p))}</a></p>`;
-      if(p.dir!=null) h+=`<p><b>ストリートビュー（同じ向き）</b> <a href="${svUrl(p)}">${esc(svUrl(p))}</a></p>`;
-      h+=`</div>`;
-    }
-    h+=`</div></div>`;
-    // 4. メモ用他の写真
-    h+=`<figure class="rfig rmemo">${p.setup?`<img src="${p.setup}" alt="">`:'<div class="rnone">メモ用の写真なし</div>'}<figcaption>メモ用他の写真</figcaption></figure>`;
-    pg.innerHTML=h;rep.appendChild(pg);
-    if(p.lat!=null){pg.querySelector('.rmapbox').appendChild(await staticMap(p,760,256,16))}
+
+/* ===== 保存（iPhoneは共有画面、パソコンはダウンロード） ===== */
+async function saveFile(file){
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}
+  catch(e){if(e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),30000);
+}
+function showHint(t){const h=$('#pdfhint');h.textContent=t||'';h.hidden=!t}
+function exportError(e){showHint(e&&e.name==='SecurityError'?'地図画像を書き込めませんでした。別の地図（航空写真/地図/衛星）に切り替えるか、少し待ってからもう一度お試しください。':'書き出せませんでした：'+((e&&e.message)||e))}
+function drawContain(g,img,x,y,w,h,bg){g.fillStyle=bg;g.fillRect(x,y,w,h);if(!img)return;
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height,r=Math.min(w/iw,h/ih),dw=iw*r,dh=ih*r;g.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh)}
+
+/* ===== PDF書き出し：A4縦1ページ（200dpiの画像＋リンク） ===== */
+async function renderA4(p){
+  try{await document.fonts.ready}catch(e){}
+  const MM=1654/210,W=1654,H=2339,M=Math.round(10*MM),IW=W-2*M;
+  const FD='"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif',FB='"IBM Plex Sans JP","Hiragino Sans","Yu Gothic",sans-serif',FM='"JetBrains Mono",Menlo,monospace';
+  const INK='#14262b',MUTED='#5d6f72',ACC='#d6492b',TEAL='#1f6f78',BG='#eef1f0',LINE='#cdd6d5';
+  const photo=p.thumb?await loadImg(p.thumb):null, memo=p.setup?await loadImg(p.setup):null;
+  const mapH=540, mapCv=p.lat!=null?await staticMap(p,IW/2,mapH/2,16,true):null;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');const links=[];
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);g.textBaseline='alphabetic';
+  let y=M;
+  // タイトル
+  g.fillStyle=INK;g.font=`700 58px ${FD}`;g.fillText('撮影方位レポート',M,y+56);
+  g.fillStyle=MUTED;g.font=`400 18px ${FM}`;g.textAlign='right';g.fillText(p.name,W-M,y+30);g.fillText('作成 '+fmtDate(new Date()),W-M,y+56);g.textAlign='left';
+  y+=72;g.fillStyle=ACC;g.fillRect(M,y,IW,4);y+=18;
+  // 日時
+  const j=jpDate(p.date);
+  if(j){g.fillStyle=INK;g.font=`500 30px ${FB}`;g.fillText(j.day,M,y+74);const dw=g.measureText(j.day).width;
+    g.font=`600 92px ${FM}`;g.fillText(j.hm,M+dw+30,y+82);const hw=g.measureText(j.hm).width;g.fillStyle=MUTED;g.font=`600 46px ${FM}`;g.fillText(j.s,M+dw+30+hw,y+82)}
+  else{g.fillStyle=MUTED;g.font=`500 30px ${FB}`;g.fillText('撮影日時の記録なし',M,y+60)}
+  y+=100;
+  const cap=(t)=>{g.fillStyle=MUTED;g.font=`500 18px ${FB}`;g.fillText(t,M,y+20);y+=30};
+  // 1 写真
+  drawContain(g,photo,M,y,IW,560,BG);if(!photo){g.fillStyle=MUTED;g.font=`500 24px ${FB}`;g.textAlign='center';g.fillText('プレビューなし',W/2,y+290);g.textAlign='left'}
+  y+=566;cap('撮影した写真');
+  // 2 地図
+  if(mapCv){g.drawImage(mapCv,M,y,IW,mapH);g.strokeStyle=LINE;g.lineWidth=2;g.strokeRect(M,y,IW,mapH)}
+  else{g.fillStyle=BG;g.fillRect(M,y,IW,mapH);g.fillStyle=MUTED;g.font=`500 24px ${FB}`;g.textAlign='center';g.fillText('位置情報がないため地図はありません',W/2,y+mapH/2);g.textAlign='left'}
+  y+=mapH+6;const bm=BASEMAPS.find(x=>base&&x.url===base._url)||BASEMAPS[0];cap(`地図：${bm.label}（${bm.src}）　扇形＝画角／破線＝カメラの向き`);
+  // 3 シーン・カット・テイク・メモ
+  const sh=96,cw=190;g.strokeStyle=INK;g.lineWidth=3;g.strokeRect(M,y,IW,sh);
+  [['シーン',p.scene],['カット',p.cut],['テイク',p.take]].forEach(([k,v],i)=>{const x=M+i*cw;if(i){g.fillStyle=INK;g.fillRect(x,y,2,sh)}
+    g.fillStyle=MUTED;g.font=`500 17px ${FB}`;g.fillText(k,x+14,y+26);g.fillStyle=INK;g.font=`600 42px ${FM}`;g.fillText(String(v||''),x+14,y+78)});
+  g.fillStyle=INK;g.fillRect(M+3*cw,y,2,sh);g.fillStyle=MUTED;g.font=`500 17px ${FB}`;g.fillText('メモ',M+3*cw+14,y+26);
+  g.fillStyle=INK;g.font=`500 24px ${FB}`;wrapText(g,String(p.memo||''),IW-3*cw-28).slice(0,2).forEach((l,i)=>g.fillText(l,M+3*cw+14,y+58+i*28));
+  y+=sh+18;
+  // 情報（3列）
+  const F=fov(p),items=[];
+  if(p.dir!=null)items.push(['カメラの向き',`${p.dir.toFixed(1)}° ${dirName(p.dir)}（${p.magDir!=null?'真北・磁北から補正':(p.ref==='M'?'磁北':'真北')}）`]);
+  if(p.lat!=null)items.push(['緯度・経度',`${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`]);
+  if(F)items.push(['水平画角',`${F.toFixed(1)}°（${p.f35}mm換算）`]);
+  if(p.alt!=null)items.push(['高度',`${p.alt.toFixed(1)} m`]);
+  if(p.acc!=null)items.push(['測位誤差',`±${p.acc.toFixed(1)} m`]);
+  if(p.model)items.push(['機種',p.model+(p.lens?' / '+p.lens:'')]);
+  const colW=IW/3;items.forEach(([k,v],i)=>{const x=M+(i%3)*colW,yy=y+Math.floor(i/3)*34+24;
+    g.fillStyle=MUTED;g.font=`500 18px ${FB}`;g.fillText(k,x,yy);const kw=g.measureText(k).width;
+    g.fillStyle=INK;g.font=`500 19px ${FM}`;let t=v;while(g.measureText(t).width>colW-kw-30&&t.length>4)t=t.slice(0,-2)+'…';g.fillText(t,x+kw+12,yy)});
+  y+=Math.ceil(items.length/3)*34+10;
+  // リンク
+  if(p.lat!=null){
+    const L=[['Googleマップ',gmapUrl(p)]];if(p.dir!=null)L.push(['ストリートビュー（同じ向き）',svUrl(p)]);
+    L.forEach(([k,u])=>{g.fillStyle=INK;g.font=`700 18px ${FB}`;g.fillText(k,M,y+22);const kw=g.measureText(k).width;
+      g.fillStyle=TEAL;g.font=`400 17px ${FM}`;let t=u;while(g.measureText(t).width>IW-kw-20&&t.length>10)t=t.slice(0,-2);
+      g.fillText(t,M+kw+14,y+22);const tw=g.measureText(t).width;g.fillRect(M+kw+14,y+26,tw,1.5);
+      links.push({x:M,y:y,w:kw+14+tw,h:30,url:u});y+=32});
   }
-  await Promise.all([...rep.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})));
+  y+=12;
+  // 4 メモ用他の写真（残りの高さ）
+  const mh=Math.max(200,H-M-34-y);drawContain(g,memo,M,y,IW,mh,BG);
+  if(!memo){g.fillStyle=MUTED;g.font=`500 24px ${FB}`;g.textAlign='center';g.fillText('メモ用の写真なし',W/2,y+mh/2);g.textAlign='left'}
+  y+=mh+6;cap('メモ用他の写真');
+  return {cv,links,W,H,MM};
 }
 async function exportPdf(){
   const p=photos[active];if(!p)return;
-  const b=$('#pdf'),label=b.textContent;b.disabled=true;b.textContent='準備中…';$('#pdfhint').hidden=false;
-  const prev=document.title;
-  let name=pdfName(p);
+  const b=$('#pdf'),label=b.textContent;b.disabled=true;b.textContent='作成中…';showHint('');
   try{
-    await buildReport(p);
-    document.title=name;            // 保存時のファイル名になる
-    window.print();
-  }finally{
-    b.disabled=false;b.textContent=label;
-    $('#pdfhint').hidden=true;
-    const restore=()=>{document.title=prev;window.removeEventListener('afterprint',restore)};
-    window.addEventListener('afterprint',restore);setTimeout(restore,120000);
-  }
+    if(!window.jspdf)throw new Error('PDFの部品を読み込めていません。電波のある所で一度ページを開き直してください。');
+    const {cv,links,MM}=await renderA4(p);
+    const img=cv.toDataURL('image/jpeg',0.9);   // 地図が書き込めない場合はここで SecurityError
+    const doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    doc.setProperties({title:pdfName(p),creator:'撮影方位レポート'});
+    doc.addImage(img,'JPEG',0,0,210,297);
+    links.forEach(l=>doc.link(l.x/MM,l.y/MM,l.w/MM,l.h/MM,{url:l.url}));
+    const blob=doc.output('blob');
+    await saveFile(new File([blob],`${pdfName(p)}.pdf`,{type:'application/pdf'}));
+  }catch(e){exportError(e)}
+  finally{b.disabled=false;b.textContent=label}
 }
+
 $('#pdf').onclick=()=>exportPdf();
 
 /* ===== JPG書き出し（写真・地図・QRコードを1枚の画像に） ===== */
@@ -583,17 +587,12 @@ async function buildJpg(p){
 }
 async function exportJpg(){
   const p=photos[active];if(!p)return;
-  const b=$('#jpg'),label=b.textContent;b.disabled=true;b.textContent='作成中…';
+  const b=$('#jpg'),label=b.textContent;b.disabled=true;b.textContent='作成中…';showHint('');
   try{
     const blob=await buildJpg(p);
-    const file=new File([blob],`${pdfName(p)}.jpg`,{type:'image/jpeg'});
-    let shared=false;
-    try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});shared=true}}catch(e){if(e.name==='AbortError')shared=true}
-    if(!shared){const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
-  }catch(e){
-    const h=$('#pdfhint');h.hidden=false;
-    h.textContent=e&&e.name==='SecurityError'?'地図画像を画像に書き込めませんでした。少し時間をおくか、別の地図（航空写真/地図/衛星）に切り替えてもう一度お試しください。':'JPGを作れませんでした：'+(e.message||e);
-  }finally{b.disabled=false;b.textContent=label}
+    await saveFile(new File([blob],`${pdfName(p)}.jpg`,{type:'image/jpeg'}));
+  }catch(e){exportError(e)}
+  finally{b.disabled=false;b.textContent=label}
 }
 $('#jpg').onclick=exportJpg;
 

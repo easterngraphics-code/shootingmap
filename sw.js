@@ -1,6 +1,6 @@
 // 撮影ツール service worker（メニューと全アプリ共通）
 // アプリを追加したら SHELL にそのフォルダのファイルを足し、VERSION を上げる
-const VERSION = 'v11';
+const VERSION = 'v12';
 const APP = `app-${VERSION}`;
 const TILES = 'tiles';
 const MAX_TILES = 1500;
@@ -14,7 +14,8 @@ const SHELL = [
   'https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
   'https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js',
-  'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'
+  'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
 ];
 const TILE_HOSTS = ['cyberjapandata.gsi.go.jp', 'server.arcgisonline.com'];
 const STATIC_HOSTS = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -50,7 +51,8 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
       const c = await caches.open(APP);
       try {
-        const res = await fetch(req);
+        // HTTPキャッシュを通さず、常にGitHubの最新版を取りに行く
+        const res = await fetch(req.url, { cache: 'no-store', credentials: 'same-origin' });
         if (res.ok) c.put(req, res.clone());
         return res;
       } catch {
